@@ -10,11 +10,37 @@ AI 画像 CG 集を「お手本」として取り込み、画像ごとの txt �
 
 | Phase | 内容 | 状態 |
 |---|---|---|
-| 0 | 実測とフィクスチャ | 完了（ブランチ `phase/0-measurement-fixtures`） |
-| 1 | txt ＋ ログ ＋ D&D（DB なし） | 未着手 |
+| 0 | 実測とフィクスチャ | 完了 |
+| 1 | txt ＋ ログ ＋ D&D（DB なし） | 完了（`docs/phase1/report.md`） |
 | 2 | DB 取り込み（NovelAI） | 未着手 |
 | 3 | 他形式の抽出（A1111 / SwarmUI / InvokeAI） | 未着手 |
 | 4 | ComfyUI 辿り | 未着手 |
+
+## 使い方（Phase 1 時点）
+
+exe にフォルダをドラッグ＆ドロップするか、CLI でフォルダを渡します。
+
+```powershell
+# 複数フォルダを一括処理（txt サイドカーとログを出力）
+.\sdGalleryImporter.exe "D:\CG\gallery-a" "D:\CG\gallery-b"
+
+# サブフォルダも常に処理する
+.\sdGalleryImporter.exe --recursive "D:\CG"
+
+# 書き込み内容の予測だけをログに出す
+.\sdGalleryImporter.exe --dry-run "D:\CG\gallery-a"
+
+# 自ツール製 txt のみ上書きする
+.\sdGalleryImporter.exe --overwrite "D:\CG\gallery-a"
+
+# DB パスの上書き（Phase 1 ではログに出すだけで開かない）
+.\sdGalleryImporter.exe --db "D:\data\story.db" "D:\CG\gallery-a"
+
+# バージョン
+.\sdGalleryImporter.exe --version
+```
+
+DB の作成・取り込みは Phase 2 以降。Phase 1 は画像を移動・改変せず、txt とログだけを書きます。
 
 ## 依存とビルド
 
