@@ -136,8 +136,8 @@ fn multi_folder_run_writes_sidecars_and_log() {
         "索引ファイルは作らない"
     );
     assert!(
-        !env.exe_dir.join("story.db").exists(),
-        "Phase 1 は DB を作らない"
+        env.exe_dir.join("story.db").is_file(),
+        "Phase 2 以降は既定の story.db を作る"
     );
 
     assert!(log.contains("種別: リーフ"));
@@ -424,24 +424,24 @@ fn version_argument_errors_and_config() {
     env.write_config("db_path = \"unterminated\n");
     assert_eq!(env.run_strs(&[&gallery_text]).code, 1);
 
-    env.write_config("db_path = \"data\\\\gallery.db\"\n");
+    env.write_config("db_path = \"configured.db\"\n");
     let configured = env.run_strs(&[&gallery_text]);
     assert_eq!(configured.code, 0);
-    assert!(configured.log.contains("data\\gallery.db"));
-    assert!(!env.exe_dir.join("data").join("gallery.db").exists());
+    assert!(configured.log.contains("configured.db"));
+    assert!(env.exe_dir.join("configured.db").is_file());
 
     env.write_config("# db_path なし\n");
     let defaulted = env.run_strs(&[&gallery_text]);
     assert_eq!(defaulted.code, 0);
     assert!(defaulted.log.contains("story.db"));
-    assert!(!env.exe_dir.join("story.db").exists());
+    assert!(env.exe_dir.join("story.db").is_file());
 
     let cli_db = env.run_strs(&["--db", "relative.db", &gallery_text]);
     assert_eq!(cli_db.code, 0);
     assert!(cli_db
         .log
         .contains(&format!("{}", env.exe_dir.join("relative.db").display())));
-    assert!(!env.exe_dir.join("relative.db").exists());
+    assert!(env.exe_dir.join("relative.db").is_file());
 }
 
 #[test]

@@ -2,6 +2,11 @@
 
 pub mod cli;
 pub mod config;
+pub mod db;
+pub mod dimensions;
+pub mod extract;
+pub mod hash;
+pub mod import;
 pub mod logger;
 pub mod natural;
 pub mod paths;
