@@ -595,6 +595,68 @@ pub fn swarmui_jpeg_model(params: &str) -> Vec<u8> {
     })
 }
 
+pub fn swarmui_png_with(pos: &str, neg: &str) -> Vec<u8> {
+    let params = serde_json::json!({
+        "sui_image_params": {
+            "prompt": pos,
+            "negativeprompt": neg,
+            "seed": 1,
+            "steps": 20,
+            "width": 1024,
+            "height": 1024,
+        }
+    })
+    .to_string();
+    swarmui_png(&params)
+}
+
+pub fn swarmui_jpeg_user_comment_with(pos: &str, neg: &str) -> Vec<u8> {
+    let params = serde_json::json!({
+        "sui_image_params": {"prompt": pos, "negativeprompt": neg}
+    })
+    .to_string();
+    swarmui_jpeg_user_comment(&params)
+}
+
+pub fn swarmui_jpeg_model_with(pos: &str, neg: &str) -> Vec<u8> {
+    let params = serde_json::json!({
+        "sui_image_params": {"prompt": pos, "negativeprompt": neg}
+    })
+    .to_string();
+    swarmui_jpeg_model(&params)
+}
+
+pub fn invokeai_png_with(pos: &str, neg: &str) -> Vec<u8> {
+    let metadata = serde_json::json!({
+        "positive_prompt": pos,
+        "negative_prompt": neg,
+        "seed": 1,
+        "steps": 20,
+        "width": 1024,
+        "height": 768,
+    })
+    .to_string();
+    png(&PngSpec::default()
+        .size(1024, 768)
+        .text("invokeai_metadata", metadata))
+}
+
+pub fn invokeai_sd_metadata_with(prompt: serde_json::Value) -> Vec<u8> {
+    let metadata = serde_json::json!({
+        "model": "stable diffusion",
+        "app_id": "invoke-ai/InvokeAI",
+        "image": {
+            "prompt": prompt,
+            "width": 512,
+            "height": 512,
+        }
+    })
+    .to_string();
+    png(&PngSpec::default()
+        .size(512, 512)
+        .text("sd-metadata", metadata))
+}
+
 pub fn invokeai_png() -> Vec<u8> {
     png(&PngSpec::default()
         .size(1024, 768)
@@ -612,6 +674,13 @@ pub fn png_exif_user_comment(text: &str) -> Vec<u8> {
     png(&PngSpec::default()
         .size(64, 48)
         .exif(tiff(&[(0x9286, 7, exif_user_comment(text))])))
+}
+
+/// PNG の eXIf チャンクに ImageDescription を持つ（A1111 候補）。
+pub fn png_exif_image_description(text: &str) -> Vec<u8> {
+    png(&PngSpec::default()
+        .size(64, 48)
+        .exif(tiff(&[(0x010e, 2, text.as_bytes().to_vec())])))
 }
 
 /// IEND の後に parameters テキストを付加した PNG（Trailing 経由）。
