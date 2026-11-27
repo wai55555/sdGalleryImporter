@@ -418,9 +418,60 @@ fn invokeai_old_pos(prompt: &serde_json::Value) -> Option<String> {
     }
 }
 
-/// Phase 4 で実装する ComfyUI の辿り。Phase 3 では常に未抽出。
-fn traverse_comfyui(_body: &str) -> Option<(Option<String>, String)> {
-    None
+/// ComfyUI の `prompt`（API 形式 JSON）から pos/neg を辿る（REQ-6.4）。
+///
+/// サンプラーノードがちょうど 1 個で、positive / negative の直接リンク先が
+/// CLIPTextEncode のときだけ、その `inputs.text` を採用する。
+fn traverse_comfyui(body: &str) -> Option<(Option<String>, String)> {
+    let value: serde_json::Value = serde_json::from_str(body).ok()?;
+    let object = value.as_object()?;
+    let graph = match object.get("prompt") {
+        Some(serde_json::Value::Object(inner)) => inner,
+        _ => object,
+    };
+
+    let mut samplers = Vec::new();
+    for node in graph.values() {
+        let Some(node) = node.as_object() else {
+            continue;
+        };
+        let Some(class_type) = node.get("class_type").and_then(|value| value.as_str()) else {
+            continue;
+        };
+        if class_type != "KSampler" && class_type != "KSamplerAdvanced" {
+            continue;
+        }
+        let Some(inputs) = node.get("inputs").and_then(|value| value.as_object()) else {
+            continue;
+        };
+        if inputs.contains_key("positive") || inputs.contains_key("negative") {
+            samplers.push(inputs);
+        }
+    }
+    if samplers.len() != 1 {
+        return None;
+    }
+    let inputs = samplers[0];
+    let pos = follow_text_link(graph, inputs.get("positive"));
+    let neg = follow_text_link(graph, inputs.get("negative")).unwrap_or_default();
+    Some((pos, neg))
+}
+
+fn follow_text_link(
+    graph: &serde_json::Map<String, serde_json::Value>,
+    link: Option<&serde_json::Value>,
+) -> Option<String> {
+    let link = link?.as_array()?;
+    let node_id = link.first()?.as_str()?;
+    let node = graph.get(node_id)?.as_object()?;
+    if node.get("class_type").and_then(|value| value.as_str())? != "CLIPTextEncode" {
+        return None;
+    }
+    node.get("inputs")?
+        .as_object()?
+        .get("text")?
+        .as_str()
+        .map(ToString::to_string)
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -581,6 +632,75 @@ mod tests {
         assert_eq!(analysis.source, SourceKind::Invokeai);
         assert_eq!(analysis.pos.as_deref(), Some("(a:1.0), (b:0.8)"));
         assert_eq!(analysis.neg.as_deref(), Some(""));
+    }
+
+    #[test]
+    fn comfyui_single_sampler_direct_links_are_traversed() {
+        let graph = r#"{
+          "3": {"class_type":"KSampler","inputs":{"positive":["7",0],"negative":["6",0]}},
+          "6": {"class_type":"CLIPTextEncode","inputs":{"text":"neg text"}},
+          "7": {"class_type":"CLIPTextEncode","inputs":{"text":"pos text"}}
+        }"#;
+        let records = vec![record(Source::PngText, "prompt", graph)];
+        let analysis = analyze(&records);
+        assert_eq!(analysis.source, SourceKind::Comfyui);
+        assert_eq!(analysis.pos.as_deref(), Some("pos text"));
+        assert_eq!(analysis.neg.as_deref(), Some("neg text"));
+    }
+
+    #[test]
+    fn comfyui_wrapper_and_advanced_sampler_are_supported() {
+        let wrapper = r#"{"prompt":{
+          "10": {"class_type":"KSamplerAdvanced","inputs":{"positive":["7",0],"negative":["6",0]}},
+          "6": {"class_type":"CLIPTextEncode","inputs":{"text":"neg"}},
+          "7": {"class_type":"CLIPTextEncode","inputs":{"text":"pos"}}
+        }, "workflow":{}}"#;
+        let analysis = analyze(&[record(Source::PngText, "prompt", wrapper)]);
+        assert_eq!(analysis.pos.as_deref(), Some("pos"));
+        assert_eq!(analysis.neg.as_deref(), Some("neg"));
+    }
+
+    #[test]
+    fn comfyui_multiple_samplers_or_indirect_links_are_unextracted() {
+        let multiple = r#"{
+          "1": {"class_type":"KSampler","inputs":{"positive":["7",0],"negative":["6",0]}},
+          "2": {"class_type":"KSampler","inputs":{"positive":["7",0],"negative":["6",0]}},
+          "6": {"class_type":"CLIPTextEncode","inputs":{"text":"neg"}},
+          "7": {"class_type":"CLIPTextEncode","inputs":{"text":"pos"}}
+        }"#;
+        let analysis = analyze(&[record(Source::PngText, "prompt", multiple)]);
+        assert_eq!(analysis.source, SourceKind::Comfyui);
+        assert!(analysis.pos.is_none());
+
+        let indirect = r#"{
+          "3": {"class_type":"KSampler","inputs":{"positive":["8",0],"negative":["6",0]}},
+          "6": {"class_type":"CLIPTextEncode","inputs":{"text":"neg"}},
+          "8": {"class_type":"ConditioningCombine","inputs":{}}
+        }"#;
+        let analysis = analyze(&[record(Source::PngText, "prompt", indirect)]);
+        assert_eq!(analysis.source, SourceKind::Comfyui);
+        assert!(analysis.pos.is_none());
+
+        let text_link = r#"{
+          "3": {"class_type":"KSampler","inputs":{"positive":["7",0],"negative":["6",0]}},
+          "6": {"class_type":"CLIPTextEncode","inputs":{"text":"neg"}},
+          "7": {"class_type":"CLIPTextEncode","inputs":{"text":["9",0]}},
+          "9": {"class_type":"CLIPTextEncode","inputs":{"text":"nested"}}
+        }"#;
+        let analysis = analyze(&[record(Source::PngText, "prompt", text_link)]);
+        assert!(analysis.pos.is_none());
+    }
+
+    #[test]
+    fn comfyui_custom_sampler_is_not_a_target() {
+        let graph = r#"{
+          "3": {"class_type":"SamplerCustom","inputs":{"positive":["7",0],"negative":["6",0]}},
+          "6": {"class_type":"CLIPTextEncode","inputs":{"text":"neg"}},
+          "7": {"class_type":"CLIPTextEncode","inputs":{"text":"pos"}}
+        }"#;
+        let analysis = analyze(&[record(Source::PngText, "prompt", graph)]);
+        assert_eq!(analysis.source, SourceKind::Comfyui);
+        assert!(analysis.pos.is_none());
     }
 
     #[test]
