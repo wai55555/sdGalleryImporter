@@ -31,7 +31,7 @@ cargo test --locked
   phase2_db_novelai:   6 passed
   phase3_formats:      2 passed
   phase4_comfyui:      1 passed
-  final_acceptance:    2 passed
+  final_acceptance:    3 passed
 cargo clippy --all-targets: warning 0
 ```
 
@@ -51,14 +51,34 @@ Phase 4 のテスト:
 | 3 ギャラリー→ページ→segment→配置→story | `novelai_gallery_builds_story_segments_and_placements`, `container_children_and_role_mismatch` |
 | 4 pos 同・neg 異、連続 run、pos のみ | `novelai_gallery_builds_story_segments_and_placements` |
 | 5 メタデータなしの分断 | `novelai_gallery_builds_story_segments_and_placements`, `comfyui_traversal_and_fallbacks` |
-| 6 再取り込みで増えない・子の追加 | `reimport_skips_db_writes_and_reuses_db_stats`, `container_children_and_role_mismatch` |
+| 6 再取り込みで増えない・子の追加・txt 復活 | `reimport_skips_db_writes_and_reuses_db_stats`, `container_children_and_role_mismatch`, `lines_are_shared_across_galleries_and_txt_is_restored_on_skip` |
 | 7 seed・パラメータ差で分かれない／正規化しない | `parameters_and_normalization_do_not_change_segments` |
 | 8 ログが残る | 各統合テスト（ログの status・未抽出・合計） |
 | 9 画像が改変されない | `multi_folder_run_writes_sidecars_and_log`, `parameters_and_normalization_do_not_change_segments` |
 | 10 バックフィル・重複警告・ロールバック | `legacy_db_backfill_reuses_min_id_and_failure_rolls_back` |
 | 11 大小文字・末尾スラッシュ・ジャンクション | `multi_folder_run_writes_sidecars_and_log`, `container_recursive_and_natural_order` |
 
-## 4. 残課題・注意
+## 4. 実サンプルでの通し確認（コピー）
+
+実ギャラリーを変更しないよう、Phase 0 で使った NovelAI CG 集 80 ページを
+`target/real-sample/gallery` にコピーして実行した。
+
+| 項目 | 結果 |
+|---|---|
+| 実行時間（release） | 166 ms（80 枚、txt 生成・抽出・DB 込み） |
+| txt | 80 枚すべて `written`（索引ファイルなし） |
+| galleries / stories | 1 / 1 |
+| pages / segments / placements | 80 / 77 / 77 |
+| lines | 61 |
+| repeat 分布 | 1×74, 2×3（Phase 0 の実測と一致） |
+| `import_runs` | gallery 1 / page 80 / segment 77 / unextracted 0 |
+| 寸法 | 1216×832（全ページ） |
+| 画像の改変 | コピー元 80 枚の SHA-256 と一致 |
+| txt の同一性 | fast_meta CLI と本文一致。CLI に OS 表記の絶対パスを渡した場合はフルバイト一致 |
+
+元の `E:` のギャラリーと実 DB は変更していない（検証はコピーと検証用 DB のみ）。
+
+## 5. 残課題・注意
 
 - 実サンプル CG 集での通し確認と、実 DB への取り込みは行っていない。仕様書の運用に従い、
   Phase 4 完了版から実 DB を使ってよい段階になった。

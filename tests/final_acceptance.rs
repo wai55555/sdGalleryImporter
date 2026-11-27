@@ -209,3 +209,63 @@ fn leaf_db_failure_rolls_back_and_other_galleries_continue() {
         "失敗分は集計に入れない"
     );
 }
+
+#[test]
+fn lines_are_shared_across_galleries_and_txt_is_restored_on_skip() {
+    let env = TestEnv::new("final-cross-gallery");
+    let g1 = env.work("work/g1");
+    let g2 = env.work("work/g2");
+    write(
+        &g1,
+        "001.png",
+        &novelai_with_seed("shared pos", "shared neg", 1),
+    );
+    write(
+        &g2,
+        "001.png",
+        &novelai_with_seed("shared pos", "shared neg", 2),
+    );
+
+    let first = env.run_strs(&[&path_string(&g1), &path_string(&g2)]);
+    assert_eq!(first.code, 0, "{}", first.log);
+    let db_path = env.exe_dir.join("story.db");
+    let connection = Connection::open(&db_path).unwrap();
+    let scalar = |sql: &str| -> i64 { connection.query_row(sql, [], |row| row.get(0)).unwrap() };
+    assert_eq!(scalar("SELECT COUNT(*) FROM galleries"), 2);
+    assert_eq!(scalar("SELECT COUNT(*) FROM stories"), 2);
+    assert_eq!(
+        scalar("SELECT COUNT(*) FROM lines"),
+        1,
+        "ギャラリーをまたいで行を共有"
+    );
+    assert_eq!(scalar("SELECT COUNT(*) FROM segments"), 2);
+    assert_eq!(scalar("SELECT COUNT(*) FROM placements"), 2);
+    let same_line: i64 = connection
+        .query_row("SELECT COUNT(DISTINCT line_id) FROM segments", [], |row| {
+            row.get(0)
+        })
+        .unwrap();
+    assert_eq!(same_line, 1);
+
+    fs::remove_file(g1.join("001.txt")).unwrap();
+    let second = env.run_strs(&[&path_string(&g1)]);
+    assert_eq!(second.code, 0);
+    assert!(second
+        .log
+        .contains("取り込み済みのため DB 書き込みをスキップ"));
+    assert!(
+        g1.join("001.txt").is_file(),
+        "取り込み済みでも欠落した txt は復活する"
+    );
+    assert_eq!(scalar("SELECT COUNT(*) FROM lines"), 1);
+    assert_eq!(scalar("SELECT COUNT(*) FROM segments"), 2);
+    let (gallery_count, page_count, segment_count): (i64, i64, i64) = connection
+        .query_row(
+            "SELECT gallery_count, page_count, segment_count FROM import_runs
+             ORDER BY id DESC LIMIT 1",
+            [],
+            |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
+        )
+        .unwrap();
+    assert_eq!((gallery_count, page_count, segment_count), (0, 0, 0));
+}
