@@ -14,9 +14,9 @@ AI 画像 CG 集を「お手本」として取り込み、画像ごとの txt �
 | 1 | txt ＋ ログ ＋ D&D（DB なし） | 完了（`docs/phase1/report.md`） |
 | 2 | DB 取り込み（NovelAI） | 完了（`docs/phase2/report.md`） |
 | 3 | 他形式の抽出（A1111 / SwarmUI / InvokeAI） | 完了（`docs/phase3/report.md`） |
-| 4 | ComfyUI 辿り | 未着手 |
+| 4 | ComfyUI 辿り | 完了（`docs/phase4/report.md`） |
 
-## 使い方（Phase 2 時点）
+## 使い方
 
 exe にフォルダをドラッグ＆ドロップするか、CLI でフォルダを渡します。
 
@@ -40,8 +40,11 @@ exe にフォルダをドラッグ＆ドロップするか、CLI でフォルダ
 .\sdGalleryImporter.exe --version
 ```
 
-Phase 2 では exe 隣（または `--db` / 設定の `db_path`）の SQLite に、ギャラリー・ページ・
+exe 隣（または `--db` / 設定の `db_path`）の SQLite に、ギャラリー・ページ・
 segment・行・下書きストーリー・配置を書き込みます。画像は移動・改変しません。
+
+対応するメタデータ: NovelAI、A1111 / Forge、SwarmUI、InvokeAI（現行・旧 sd-metadata）、
+ComfyUI（KSampler / KSamplerAdvanced の直接リンクをベストエフォートで辿る）。
 
 ## 依存とビルド
 
