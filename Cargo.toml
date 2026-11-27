@@ -1,0 +1,30 @@
+[package]
+name = "sdGalleryImporter"
+version = "0.1.0"
+edition = "2021"
+description = "AI 画像 CG 集を取り込み、txt サイドカーと共有 SQLite に記録する単体 exe"
+publish = false
+
+[lib]
+name = "sd_gallery_importer"
+path = "src/lib.rs"
+
+[[bin]]
+name = "sdGalleryImporter"
+path = "src/main.rs"
+
+[dependencies]
+# 仕様書 D1: fast_meta は v2.1.0 をライブラリとして固定する。
+# portable-zlib は CMake を要求しない pure Rust の deflate 実装。
+# 展開結果は zlib-ng 版と同一で、CLI 出力のバイト列にも影響しない。
+fast_meta = { git = "https://github.com/wai55555/checkImageMetadata", tag = "v2.1.0", default-features = false, features = ["portable-zlib"] }
+rusqlite = { version = "0.32", features = ["bundled"] }
+
+[dev-dependencies]
+serde_json = "1.0"
+flate2 = { version = "1.0", default-features = false, features = ["rust_backend"] }
+
+[profile.release]
+lto = true
+codegen-units = 1
+strip = true

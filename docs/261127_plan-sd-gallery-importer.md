@@ -244,10 +244,11 @@ txt は「記録」である。目的は2つ：(a) そのギャラリーを取�
 | comfyui | `prompt` キー（API 形式 JSON）等 | 辿りによる（REQ-6.4） | 辿りによる（REQ-6.4） |
 | swarmui | `sui_image_params`（JSON） | `prompt` | `negativeprompt` |
 | invokeai | `invokeai_metadata`（JSON） | `positive_prompt` | `negative_prompt` |
+| invokeai（旧 sd-metadata） | PNG `sd-metadata`（JSON） | `image.prompt`（文字列はそのまま／配列は `(<prompt>:<weight>)` を `, ` 連結） | なし（空文字列） |
 
 - NovelAI の補足：`Description` が無い場合は `Comment`（JSON）の `prompt` を pos の代替とする。**NovelAI 判定の条件は「`Comment` が JSON として解析でき、`prompt` キーまたは `uc` キーを含むこと」で固定する**（`Description` 単独では NovelAI と判定しない。`Description` キーは他形式も使うため）。
 - **複数候補の優先順位**：1枚の画像に複数の形式の候補が共存する場合は、次の順で「最初に pos が取れた候補」を採用し、`source` はその形式とする。(1) NovelAI（上記の判定条件を満たす場合）→ (2) ComfyUI（`prompt` キーの辿りに成功した場合）→ (3) A1111（`parameters` 系レコード）→ (4) SwarmUI → (5) InvokeAI。どの候補でも pos が取れなければ未抽出とする。
-- InvokeAI の旧 `sd-metadata` 形式は Phase 3 の対象とするが、そのキー構成は Phase 0 で用意する実物フィクスチャに基づき、この表へ追記してから実装する（推測でキー名を書かない）。
+- InvokeAI の旧 `sd-metadata` 形式（Phase 3 で実装）の補足：キー構成は Phase 0 で実物確認済み。`image.prompt` が文字列ならそのまま pos とする。配列 `[{ "prompt": <文字列>, "weight": <数値> }, ...]` なら、各要素を `(<prompt>:<weight>)` として出現順に `, ` で連結する（例：`[{"prompt":"masterpiece","weight":1.0},{"prompt":"1girl","weight":0.8}]` → `(masterpiece:1.0), (1girl:0.8)`）。`weight` が無い（または数値でない）要素は `prompt` のみ、`prompt` が空の要素は飛ばす。連結結果が空なら未抽出。`neg` は常に空文字列（旧形式に負のプロンプトが無いため）。`image.prompt` が文字列でも配列でもない場合は未抽出。`weight` は JSON の数値を serde_json の標準表記で書く（`1.0` は `1.0`、`0.80` は `0.8`）。
 - pos を採用して `source = 'unknown'` として取り込むのは、上記の全候補が不成立で、かつ単独の `Description` レコードの本文が存在する場合に限る。その本文を pos とし、neg は空とする。それ以外の場合（生成元が判定できず pos も採用できないページ）も、`source` には §4.3 の定義どおり `unknown` を記録したうえで未抽出とする。
 - `source` の決定規則の総括：fast_meta がレコードを1件も返さなかったページは `source = 'none'`。ただし、読み取り自体に失敗したページ（壊れた画像等）は、レコードの有無によらず `source = 'error'` とする（REQ-9.4）。生成元の判定自体ができなかったページ（Stealth レコードのみが返った場合を含む）は `source = 'unknown'`。生成元は判定できたが pos が取れなかったページは、その生成元を `source` に記録したうえで未抽出とする（REQ-6.3）。判定できた生成元が複数あり、どの候補からも pos が取れなかった場合は、複数候補の優先順位で最上位の判定済み生成元を `source` に記録する。生成元の判定は pos の取得成否とは独立に行う（例：`prompt` キーがあれば comfyui、Comment が NovelAI の JSON であれば novelai、と判定する）。
 

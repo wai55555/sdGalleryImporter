@@ -1,0 +1,1 @@
+{"app_version":"6.0.0","generation_mode":"txt2img","positive_prompt":"Controlled example: three folded paper stars","negative_prompt":"text","seed":0,"steps":30,"cfg_scale":4.5,"scheduler":"euler","width":1024,"height":768,"model":{"name":"demonstration-only"}}

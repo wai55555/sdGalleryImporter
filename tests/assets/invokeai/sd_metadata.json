@@ -1,0 +1,30 @@
+{
+    "model": "stable diffusion",
+    "model_id": "stable-diffusion-1.4",
+    "model_hash": "fe4efff1e174c627256e44ec2991ba279b3816e364b49f9be2abc0b3ff3f8556",
+    "app_id": "invoke-ai/InvokeAI",
+    "app_version": "v2.1.2",
+    "image": {
+        "width": 512,
+        "facetool_strength": 0.0,
+        "upscale": null,
+        "cfg_scale": 9,
+        "steps": 50,
+        "perlin": 0.0,
+        "facetool": "gfpgan",
+        "seed": 1034856165,
+        "init_mask": null,
+        "prompt": [
+            {
+                "prompt": "an astronaut riding a horse",
+                "weight": 1.0
+            }
+        ],
+        "threshold": 0.0,
+        "height": 512,
+        "postprocessing": null,
+        "sampler": "k_lms",
+        "variations": [],
+        "type": "txt2img"
+    }
+}
