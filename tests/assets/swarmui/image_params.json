@@ -1,0 +1,27 @@
+{
+  "sui_image_params": {
+    "prompt": "a photo of a cat",
+    "model": "OfficialStableDiffusion/sd_xl_base_1.0",
+    "seed": 1,
+    "steps": 20,
+    "cfgscale": 7.0,
+    "aspectratio": "1:1",
+    "width": 1024,
+    "height": 1024,
+    "automaticvae": true,
+    "negativeprompt": "",
+    "swarm_version": "0.9.3.1"
+  },
+  "sui_extra_data": {
+    "date": "2025-01-25",
+    "prep_time": "6.11 sec",
+    "generation_time": "4.84 sec"
+  },
+  "sui_models": [
+    {
+      "name": "OfficialStableDiffusion/sd_xl_base_1.0.safetensors",
+      "param": "model",
+      "hash": "0xd7a9105a900fd52748f20725fe52fe52b507fd36bee4fc107b1550a26e6ee1d7"
+    }
+  ]
+}

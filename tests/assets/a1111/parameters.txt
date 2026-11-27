@@ -1,0 +1,10 @@
+masterpiece,best quality,anime screenshot,anime coloring,jewelry,sound effects only,dynamic angle,indoors,blazblue,
+BREAK
+1girl,<lora:rachel_alucard_IL:0.8>,rachel alucard,blonde hair,long hair,twintails,red eyes,bow,ribbon,red bow,hair ribbon,dress,frills,very long hair,
+open clothes,nipples,loli,skinny,narrow waist,child,flat chest,
+blush,sweat,heavy breathing,expressionless,
+BREAK
+1boy,big_man,huge penis,pussy,vaginal,sex,spread legs,cowgirl position,standing,riding,arms up,hand in own hair,hetero,testicles,,cum in pussy,bukkake,large insertion,faceless male,
+mosaic censoring,bar censor,motion lines,motion blur,
+Negative prompt: (worst quality,low quality:1.4),extra arms,extra legs,photo,3d,low_contrast,chinese text,korean text,speech bubble,spoken,
+Steps: 20, Sampler: Euler a, Schedule type: Automatic, CFG scale: 5.5, Seed: 3090255886, Size: 1024x768, Model hash: b8a203e61e, Model: cocoIllustriousNoobxl_v10, Denoising strength: 0.5, Clip skip: 2, Hires Module 1: Use same choices, Hires CFG Scale: 7, Hires upscale: 2, Hires upscaler: R-ESRGAN 4x+ Anime6B, Lora hashes: "rachel_alucard_IL: 9121458bfe95", Version: f2.0.1v1.10.1-previous-662-g0ced1d0c
