@@ -13,7 +13,7 @@ AI 画像 CG 集を「お手本」として取り込み、画像ごとの txt �
 | 0 | 実測とフィクスチャ | 完了 |
 | 1 | txt ＋ ログ ＋ D&D（DB なし） | 完了（`docs/phase1/report.md`） |
 | 2 | DB 取り込み（NovelAI） | 完了（`docs/phase2/report.md`） |
-| 3 | 他形式の抽出（A1111 / SwarmUI / InvokeAI） | 未着手 |
+| 3 | 他形式の抽出（A1111 / SwarmUI / InvokeAI） | 完了（`docs/phase3/report.md`） |
 | 4 | ComfyUI 辿り | 未着手 |
 
 ## 使い方（Phase 2 時点）
