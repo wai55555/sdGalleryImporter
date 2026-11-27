@@ -12,11 +12,11 @@ AI 画像 CG 集を「お手本」として取り込み、画像ごとの txt �
 |---|---|---|
 | 0 | 実測とフィクスチャ | 完了 |
 | 1 | txt ＋ ログ ＋ D&D（DB なし） | 完了（`docs/phase1/report.md`） |
-| 2 | DB 取り込み（NovelAI） | 未着手 |
+| 2 | DB 取り込み（NovelAI） | 完了（`docs/phase2/report.md`） |
 | 3 | 他形式の抽出（A1111 / SwarmUI / InvokeAI） | 未着手 |
 | 4 | ComfyUI 辿り | 未着手 |
 
-## 使い方（Phase 1 時点）
+## 使い方（Phase 2 時点）
 
 exe にフォルダをドラッグ＆ドロップするか、CLI でフォルダを渡します。
 
@@ -33,14 +33,15 @@ exe にフォルダをドラッグ＆ドロップするか、CLI でフォルダ
 # 自ツール製 txt のみ上書きする
 .\sdGalleryImporter.exe --overwrite "D:\CG\gallery-a"
 
-# DB パスの上書き（Phase 1 ではログに出すだけで開かない）
+# DB パスの上書き
 .\sdGalleryImporter.exe --db "D:\data\story.db" "D:\CG\gallery-a"
 
 # バージョン
 .\sdGalleryImporter.exe --version
 ```
 
-DB の作成・取り込みは Phase 2 以降。Phase 1 は画像を移動・改変せず、txt とログだけを書きます。
+Phase 2 では exe 隣（または `--db` / 設定の `db_path`）の SQLite に、ギャラリー・ページ・
+segment・行・下書きストーリー・配置を書き込みます。画像は移動・改変しません。
 
 ## 依存とビルド
 
